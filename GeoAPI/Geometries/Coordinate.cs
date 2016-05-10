@@ -30,7 +30,7 @@ namespace GeoAPI.Geometries
     /// Apart from the basic accessor functions, NTS supports
     /// only specific operations involving the Z-ordinate.
     /// </remarks>
-#if !PCL    
+#if !PCL
     [Serializable]
 #endif
 #pragma warning disable 612,618
@@ -45,17 +45,28 @@ namespace GeoAPI.Geometries
         public const double NullOrdinate = Double.NaN;
 
         /// <summary>
-        /// X coordinate.
+        /// This indicates that the coordinate can have max 4 Ordinates (X,Y,Z,M).
         /// </summary>
-        public double X; // = Double.NaN;
+        public int MaxPossibleOrdinates
+        { get { return 4; } }
+
         /// <summary>
-        /// X coordinate.
+        /// The X or horizontal, or longitudinal ordinate
         /// </summary>
-        public double Y; // = Double.NaN;
+        public double X;
         /// <summary>
-        /// X coordinate.
+        /// The Y or vertical, or latitudinal ordinate
         /// </summary>
-        public double Z; // = Double.NaN;
+        public double Y;
+        /// <summary>
+        /// The Z or up or altitude ordinate
+        /// </summary>
+        public double Z;
+
+        /// <summary>
+        /// An optional place holder for a measure value if needed
+        /// </summary>
+        public double M;
 
         /// <summary>
         /// Constructs a <other>Coordinate</other> at (x,y,z).
@@ -63,11 +74,17 @@ namespace GeoAPI.Geometries
         /// <param name="x">X value.</param>
         /// <param name="y">Y value.</param>
         /// <param name="z">Z value.</param>
-        public Coordinate(double x, double y, double z)
+        public Coordinate(double x, double y, double z) : this(x, y, z, NullOrdinate) { }
+
+        /// <summary>
+        /// Creates a new instance of Coordinate
+        /// </summary>
+        public Coordinate(double x, double y, double z, double m)
         {
             X = x;
             Y = y;
             Z = z;
+            M = m;
         }
 
         /// <summary>
@@ -90,6 +107,8 @@ namespace GeoAPI.Geometries
                         return Y;
                     case Ordinate.Z:
                         return Z;
+                    case Ordinate.M:
+                        return M;
                 }
                 throw new ArgumentOutOfRangeException("ordinateIndex");
             }
@@ -106,15 +125,18 @@ namespace GeoAPI.Geometries
                     case Ordinate.Z:
                         Z = value;
                         return;
+                    case Ordinate.M:
+                        M = value;
+                        return;
                 }
                 throw new ArgumentOutOfRangeException("ordinateIndex");
             }
         }
 
         /// <summary>
-        ///  Constructs a <other>Coordinate</other> at (0,0,NaN).
+        /// Creates an coordinate with (0,0,NaN,NaN).
         /// </summary>
-        public Coordinate() : this(0.0, 0.0, NullOrdinate) { }
+        public Coordinate() : this(0, 0, NullOrdinate, NullOrdinate) { }
 
         /// <summary>
         /// Constructs a <other>Coordinate</other> having the same (x,y,z) values as
@@ -122,21 +144,21 @@ namespace GeoAPI.Geometries
         /// </summary>
         /// <param name="c"><other>Coordinate</other> to copy.</param>
         [Obsolete]
-        public Coordinate(ICoordinate c) : this(c.X, c.Y, c.Z) { }
+        public Coordinate(ICoordinate c) : this(c.X, c.Y, c.Z, c.M) { }
 
         /// <summary>
         /// Constructs a <other>Coordinate</other> having the same (x,y,z) values as
         /// <other>other</other>.
         /// </summary>
         /// <param name="c"><other>Coordinate</other> to copy.</param>
-        public Coordinate(Coordinate c) : this(c.X, c.Y, c.Z) { }
+        public Coordinate(Coordinate c) : this(c.X, c.Y, c.Z, c.M) { }
 
         /// <summary>
-        /// Constructs a <other>Coordinate</other> at (x,y,NaN).
+        /// Creates a 2D Coordinate with NaN for the Z and M values.
         /// </summary>
         /// <param name="x">X value.</param>
         /// <param name="y">Y value.</param>
-        public Coordinate(double x, double y) : this(x, y, NullOrdinate) { }
+        public Coordinate(double x, double y) : this(x, y, NullOrdinate, NullOrdinate) { }
 
         /// <summary>
         /// Gets/Sets <other>Coordinate</other>s (x,y,z) values.
@@ -149,6 +171,7 @@ namespace GeoAPI.Geometries
                 X = value.X;
                 Y = value.Y;
                 Z = value.Z;
+                M = value.M;
             }
         }
 
@@ -162,6 +185,7 @@ namespace GeoAPI.Geometries
         /// </returns>
         public bool Equals2D(Coordinate other)
         {
+            if (other == null) return false;
             return X == other.X && Y == other.Y;
         }
 
@@ -174,6 +198,7 @@ namespace GeoAPI.Geometries
         /// <remarks>The Z ordinate is ignored.</remarks>
         public bool Equals2D(Coordinate c, double tolerance)
         {
+            if (c == null) return false;
             if (!EqualsWithTolerance(X, c.X, tolerance))
                 return false;
             if (!EqualsWithTolerance(Y, c.Y, tolerance))
@@ -181,6 +206,13 @@ namespace GeoAPI.Geometries
             return true;
         }
 
+        /// <summary>
+        /// Checks whether the difference between x1 and x2 is smaller than tolerance.
+        /// </summary>
+        /// <param name="x1">First value used for check.</param>
+        /// <param name="x2">Second value used for check.</param>
+        /// <param name="tolerance">The difference must me smaller this value, for the x-values to be considered equal.</param>
+        /// <returns></returns>
         private static bool EqualsWithTolerance(double x1, double x2, double tolerance)
         {
             return Math.Abs(x1 - x2) <= tolerance;
@@ -213,7 +245,8 @@ namespace GeoAPI.Geometries
         /// <returns></returns>
         public Boolean Equals(Coordinate other)
         {
-            return Equals2D(other);
+            if (other == null) return false;
+            return (double.IsNaN(Z) || double.IsNaN(other.Z)) ? Equals2D(other) : Equals3D(other);
         }
 
         ///// <summary>
@@ -272,6 +305,7 @@ namespace GeoAPI.Geometries
         /// </returns>
         public int CompareTo(Coordinate other)
         {
+            if (other == null) return 1;
             if (X < other.X)
                 return -1;
             if (X > other.X)
@@ -292,8 +326,8 @@ namespace GeoAPI.Geometries
         /// </returns>
         public bool Equals3D(Coordinate other)
         {
-            return (X == other.X) && (Y == other.Y) &&
-                ((Z == other.Z) || (Double.IsNaN(Z) && Double.IsNaN(other.Z)));
+            if (other == null) return false;
+            return (X == other.X) && (Y == other.Y) && ((Z == other.Z) || (double.IsNaN(Z) && double.IsNaN(other.Z)));
         }
 
         /// <summary>
@@ -315,7 +349,8 @@ namespace GeoAPI.Geometries
         {
             return "(" + X.ToString("R", NumberFormatInfo.InvariantInfo) + ", " +
                          Y.ToString("R", NumberFormatInfo.InvariantInfo) + ", " +
-                         Z.ToString("R", NumberFormatInfo.InvariantInfo) + ")";
+                         Z.ToString("R", NumberFormatInfo.InvariantInfo) + ", " +
+                         M.ToString("R", NumberFormatInfo.InvariantInfo) + ")";
         }
 
         /// <summary>
@@ -324,7 +359,7 @@ namespace GeoAPI.Geometries
         /// <returns></returns>
         public object Clone()
         {
-            return new Coordinate(X, Y, Z);
+            return MemberwiseClone();
         }
 
         /// <summary>
@@ -363,13 +398,14 @@ namespace GeoAPI.Geometries
             // ReSharper disable NonReadonlyFieldInGetHashCode
             result = 37 * result + GetHashCode(X);
             result = 37 * result + GetHashCode(Y);
+            if (!double.IsNaN(Z)) result = 37 * result + GetHashCode(Z);
             // ReSharper restore NonReadonlyFieldInGetHashCode
             return result;
         }
 
         /// <summary>
         /// Computes a hash code for a double value, using the algorithm from
-        /// Joshua Bloch's book <i>Effective Java"</i>
+        /// Joshua Bloch's book <i>Effective Java"</i>.
         /// </summary>
         /// <param name="value">A hashcode for the double value</param>
         public static int GetHashCode(double value)
@@ -386,6 +422,27 @@ namespace GeoAPI.Geometries
             //if (f > 0)
             return (int)(f ^ (f >> 32));
             //return (int) (f ^ ((f >> 32) + (2 << ~32)));
+        }
+
+        /// <summary>
+        /// If either X or Y is defined as NaN, then this coordinate is considered empty.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsEmpty()
+        {
+            return (double.IsNaN(X) || double.IsNaN(Y));
+        }
+
+        /// <summary>
+        /// This is not a true length, but simply tests the Z and M value. If the M value is not NaN this is 4. Else if Z value
+        /// is NaN then the value is 2. Otherwise this is 3.
+        /// </summary>
+        public int NumOrdinates
+        {
+            get
+            {
+                return double.IsNaN(M) ? double.IsNaN(Z) ? 2 : 3 : 4;
+            }
         }
 
         #region ICoordinate
@@ -426,8 +483,8 @@ namespace GeoAPI.Geometries
         [Obsolete]
         double ICoordinate.M
         {
-            get { return Double.NaN; }
-            set { }
+            get { return M; }
+            set { M = value; }
         }
 
         /// <summary>
@@ -442,6 +499,7 @@ namespace GeoAPI.Geometries
                 X = value.X;
                 Y = value.Y;
                 Z = value.Z;
+                M = value.M;
             }
         }
 
@@ -463,6 +521,8 @@ namespace GeoAPI.Geometries
                         return Y;
                     case Ordinate.Z:
                         return Z;
+                    case Ordinate.M:
+                        return M;
                     default:
                         return NullOrdinate;
                 }
@@ -479,6 +539,9 @@ namespace GeoAPI.Geometries
                         break;
                     case Ordinate.Z:
                         Z = value;
+                        break;
+                    case Ordinate.M:
+                        M = value;
                         break;
                 }
             }

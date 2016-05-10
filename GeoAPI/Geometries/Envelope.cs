@@ -74,25 +74,19 @@ namespace GeoAPI.Geometries
             return true;
         }
 
-        /*
-        *  the minimum x-coordinate
-        */
-        private double _minx;
+        private Coordinate _max = new Coordinate(double.NaN, double.NaN);
+        private Coordinate _min = new Coordinate(double.NaN, double.NaN);
 
-        /*
-        *  the maximum x-coordinate
-        */
-        private double _maxx;
+        public Coordinate Maximum { get { return _max; } }
+        public Coordinate Minimum { get { return _min; } }
 
-        /*
-        * the minimum y-coordinate
-        */
-        private double _miny;
-
-        /*
-        *  the maximum y-coordinate
-        */
-        private double _maxy;
+        /// <summary>
+        /// Gets the number of ordinates for this envelope.
+        /// </summary>
+        public int NumOrdinates
+        {
+            get { return _min.NumOrdinates; }
+        }
 
         /// <summary>
         /// Creates a null <c>Envelope</c>.
@@ -121,7 +115,7 @@ namespace GeoAPI.Geometries
         /// <param name="p2">The second Coordinate.</param>
         public Envelope(Coordinate p1, Coordinate p2)
         {
-            Init(p1.X, p2.X, p1.Y, p2.Y);
+            Init(p1, p2);
         }
 
         /// <summary>
@@ -130,7 +124,7 @@ namespace GeoAPI.Geometries
         /// <param name="p">The Coordinate.</param>
         public Envelope(Coordinate p)
         {
-            Init(p.X, p.X, p.Y, p.Y);
+            Init(p);
         }
 
         /// <summary>
@@ -161,24 +155,24 @@ namespace GeoAPI.Geometries
         {
             if (x1 < x2)
             {
-                _minx = x1;
-                _maxx = x2;
+                _min.X = x1;
+                _max.X = x2;
             }
             else
             {
-                _minx = x2;
-                _maxx = x1;
+                _min.X = x2;
+                _max.X = x1;
             }
 
             if (y1 < y2)
             {
-                _miny = y1;
-                _maxy = y2;
+                _min.Y = y1;
+                _max.Y = y2;
             }
             else
             {
-                _miny = y2;
-                _maxy = y1;
+                _min.Y = y2;
+                _max.Y = y1;
             }
         }
 
@@ -189,7 +183,27 @@ namespace GeoAPI.Geometries
         /// <param name="p2">The second Coordinate.</param>
         public void Init(Coordinate p1, Coordinate p2)
         {
-            Init(p1.X, p2.X, p1.Y, p2.Y);
+            // ensure the number of ordinates match.
+            if (p1 == null && p2 == null)
+            {
+                Init();
+                return;
+            }
+            if (p1 == null)
+            {
+                Init(p2);
+                return;
+            }
+            if (p2 == null)
+            {
+                Init(p1);
+                return;
+            }
+            for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+            {
+                _min[(Ordinate)i] = Math.Min(p1[(Ordinate)i], p2[(Ordinate)i]);
+                _max[(Ordinate)i] = Math.Max(p1[(Ordinate)i], p2[(Ordinate)i]);
+            }
         }
 
         /// <summary>
@@ -198,7 +212,8 @@ namespace GeoAPI.Geometries
         /// <param name="p">The Coordinate.</param>
         public void Init(Coordinate p)
         {
-            Init(p.X, p.X, p.Y, p.Y);
+            _min = (Coordinate)p.Clone();
+            _max = (Coordinate)p.Clone();
         }
 
         /// <summary>
@@ -207,21 +222,23 @@ namespace GeoAPI.Geometries
         /// <param name="env">The Envelope to initialize from.</param>
         public void Init(Envelope env)
         {
-            _minx = env.MinX;
-            _maxx = env.MaxX;
-            _miny = env.MinY;
-            _maxy = env.MaxY;
+            if (env.Maximum == null || env.Minimum == null)
+            {
+                Init();
+            }
+            if (env.Maximum != null) _max = (Coordinate)env.Maximum.Clone();
+            if (env.Minimum != null) _min = (Coordinate)env.Minimum.Clone();
         }
-
         /// <summary>
-        /// Makes this <c>Envelope</c> a "null" envelope..
+        /// Makes this <c>Envelope</c> a "null" envelope.
         /// </summary>
         public void SetToNull()
         {
-            _minx = 0;
-            _maxx = -1;
-            _miny = 0;
-            _maxy = -1;
+            for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+            {
+                _min[(Ordinate)i] = double.NaN;
+                _max[(Ordinate)i] = double.NaN;
+            }
         }
 
         /// <summary>
@@ -235,7 +252,7 @@ namespace GeoAPI.Geometries
         {
             get
             {
-                return _maxx < _minx;
+                return (_min.IsEmpty() || _max.IsEmpty() || _max.X < _min.X);
             }
         }
 
@@ -249,7 +266,7 @@ namespace GeoAPI.Geometries
             {
                 if (IsNull)
                     return 0;
-                return _maxx - _minx;
+                return _max.X - _min.X;
             }
         }
 
@@ -263,7 +280,7 @@ namespace GeoAPI.Geometries
             {
                 if (IsNull)
                     return 0;
-                return _maxy - _miny;
+                return _max.Y - _min.Y;
             }
         }
 
@@ -274,7 +291,7 @@ namespace GeoAPI.Geometries
         /// <returns>The minimum x-coordinate.</returns>
         public double MinX
         {
-            get { return _minx; }
+            get { return _min.X; }
         }
 
         /// <summary>
@@ -284,7 +301,7 @@ namespace GeoAPI.Geometries
         /// <returns>The maximum x-coordinate.</returns>
         public double MaxX
         {
-            get { return _maxx; }
+            get { return _max.X; }
         }
 
         /// <summary>
@@ -294,7 +311,7 @@ namespace GeoAPI.Geometries
         /// <returns>The minimum y-coordinate.</returns>
         public double MinY
         {
-            get { return _miny; }
+            get { return _min.Y; }
         }
 
         /// <summary>
@@ -304,7 +321,7 @@ namespace GeoAPI.Geometries
         /// <returns>The maximum y-coordinate.</returns>
         public double MaxY
         {
-            get { return _maxy; }
+            get { return _max.Y; }
         }
 
         /// <summary>
@@ -340,13 +357,13 @@ namespace GeoAPI.Geometries
             if (IsNull)
                 return;
 
-            _minx -= deltaX;
-            _maxx += deltaX;
-            _miny -= deltaY;
-            _maxy += deltaY;
+            _min.X -= deltaX;
+            _max.X += deltaX;
+            _min.Y -= deltaY;
+            _max.Y += deltaY;
 
             // check for envelope disappearing
-            if (_minx > _maxx || _miny > _maxy)
+            if (_min.X > _max.X || _min.Y > _max.Y)
                 SetToNull();
         }
 
@@ -390,7 +407,26 @@ namespace GeoAPI.Geometries
         /// <param name="p">The Coordinate.</param>
         public void ExpandToInclude(Coordinate p)
         {
-            ExpandToInclude(p.X, p.Y);
+            if (p.IsEmpty())
+                return;
+            if (IsNull)
+            {
+                for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+                {
+                    _min[(Ordinate)i] = p[(Ordinate)i];
+                    _max[(Ordinate)i] = p[(Ordinate)i];
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+                {
+                    if (p[(Ordinate)i] < _min[(Ordinate)i])
+                        _min[(Ordinate)i] = p[(Ordinate)i];
+                    if (p[(Ordinate)i] > _max[(Ordinate)i])
+                        _max[(Ordinate)i] = p[(Ordinate)i];
+                }
+            }
         }
 
         /// <summary>
@@ -404,21 +440,21 @@ namespace GeoAPI.Geometries
         {
             if (IsNull)
             {
-                _minx = x;
-                _maxx = x;
-                _miny = y;
-                _maxy = y;
+                _min.X = x;
+                _max.X = x;
+                _min.Y = y;
+                _max.Y = y;
             }
             else
             {
-                if (x < _minx)
-                    _minx = x;
-                if (x > _maxx)
-                    _maxx = x;
-                if (y < _miny)
-                    _miny = y;
-                if (y > _maxy)
-                    _maxy = y;
+                if (x < _min.X)
+                    _min.X = x;
+                if (x > _max.X)
+                    _max.X = x;
+                if (y < _min.Y)
+                    _min.Y = y;
+                if (y > _max.Y)
+                    _max.Y = y;
             }
         }
 
@@ -435,21 +471,21 @@ namespace GeoAPI.Geometries
                 return;
             if (IsNull)
             {
-                _minx = other.MinX;
-                _maxx = other.MaxX;
-                _miny = other.MinY;
-                _maxy = other.MaxY;
+                for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+                {
+                    _min[(Ordinate)i] = other.Minimum[(Ordinate)i];
+                    _max[(Ordinate)i] = other.Maximum[(Ordinate)i];
+                }
             }
             else
             {
-                if (other.MinX < _minx)
-                    _minx = other.MinX;
-                if (other.MaxX > _maxx)
-                    _maxx = other.MaxX;
-                if (other.MinY < _miny)
-                    _miny = other.MinY;
-                if (other.MaxY > _maxy)
-                    _maxy = other.MaxY;
+                for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+                {
+                    if (other.Minimum[(Ordinate)i] < _min[(Ordinate)i])
+                        _min[(Ordinate)i] = other.Minimum[(Ordinate)i];
+                    if (other.Maximum[(Ordinate)i] > _max[(Ordinate)i])
+                        _max[(Ordinate)i] = other.Maximum[(Ordinate)i];
+                }
             }
         }
 
@@ -467,11 +503,15 @@ namespace GeoAPI.Geometries
             if (IsNull)
                 return other;
 
-            var minx = (other._minx < _minx) ? other._minx : _minx;
-            var maxx = (other._maxx > _maxx) ? other._maxx : _maxx;
-            var miny = (other._miny < _miny) ? other._miny : _miny;
-            var maxy = (other._maxy > _maxy) ? other._maxy : _maxy;
-            return new Envelope(minx, maxx, miny, maxy);
+            Coordinate min = new Coordinate(double.NaN, double.NaN);
+            Coordinate max = new Coordinate(double.NaN, double.NaN);
+
+            for (int i = 0; i < _min.MaxPossibleOrdinates; i++)
+            {
+                min[(Ordinate)i] = (other.Minimum[(Ordinate)i] < _min[(Ordinate)i]) ? other.Minimum[(Ordinate)i] : _min[(Ordinate)i];
+                max[(Ordinate)i] = (other.Maximum[(Ordinate)i] > _max[(Ordinate)i]) ? other.Maximum[(Ordinate)i] : _max[(Ordinate)i];
+            }
+            return new Envelope(min, max);
         }
         /// <summary>
         /// Translates this envelope by given amounts in the X and Y direction.
@@ -531,9 +571,9 @@ namespace GeoAPI.Geometries
         /// </returns>
         public bool Intersects(Envelope other)
         {
-            if (IsNull || other.IsNull)
+            if (other == null || IsNull || other.IsNull)
                 return false;
-            return !(other.MinX > _maxx || other.MaxX < _minx || other.MinY > _maxy || other.MaxY < _miny);
+            return !(other.MinX > _max.X || other.MaxX < _min.X || other.MinY > _max.Y || other.MaxY < _min.Y);
         }
 
         /// <summary>
@@ -590,7 +630,7 @@ namespace GeoAPI.Geometries
         /// <returns><c>true</c> if the point overlaps this <c>Envelope</c>.</returns>
         public bool Intersects(double x, double y)
         {
-            return !(x > _maxx || x < _minx || y > _maxy || y < _miny);
+            return !(x > _max.X || x < _min.X || y > _max.Y || y < _min.Y);
         }
 
         ///<summary>
@@ -649,10 +689,10 @@ namespace GeoAPI.Geometries
         public bool Covers(double x, double y)
         {
             if (IsNull) return false;
-            return x >= _minx &&
-                x <= _maxx &&
-                y >= _miny &&
-                y <= _maxy;
+            return x >= _min.X &&
+                x <= _max.X &&
+                y >= _min.Y &&
+                y <= _max.Y;
         }
 
         ///<summary>
@@ -674,10 +714,10 @@ namespace GeoAPI.Geometries
         {
             if (IsNull || other.IsNull)
                 return false;
-            return other.MinX >= _minx &&
-                other.MaxX <= _maxx &&
-                other.MinY >= _miny &&
-                other.MaxY <= _maxy;
+            return other.MinX >= _min.X &&
+                other.MaxX <= _max.X &&
+                other.MinY >= _min.Y &&
+                other.MaxY <= _max.Y;
         }
 
         /// <summary>
@@ -694,17 +734,17 @@ namespace GeoAPI.Geometries
 
             double dx = 0.0;
 
-            if (_maxx < env.MinX)
-                dx = env.MinX - _maxx;
-            else if (_minx > env.MaxX)
-                dx = _minx - env.MaxX;
+            if (_max.X < env.MinX)
+                dx = env.MinX - _max.X;
+            else if (_min.X > env.MaxX)
+                dx = _min.X - env.MaxX;
 
             double dy = 0.0;
 
-            if (_maxy < env.MinY)
-                dy = env.MinY - _maxy;
-            else if (_miny > env.MaxY)
-                dy = _miny - env.MaxY;
+            if (_max.Y < env.MinY)
+                dy = env.MinY - _max.Y;
+            else if (_min.Y > env.MaxY)
+                dy = _min.Y - env.MaxY;
 
             // if either is zero, the envelopes overlap either vertically or horizontally
             if (dx == 0.0)
@@ -739,8 +779,8 @@ namespace GeoAPI.Geometries
             if (IsNull)
                 return other.IsNull;
 
-            return _maxx == other.MaxX && _maxy == other.MaxY &&
-                   _minx == other.MinX && _miny == other.MinY;
+            return _max.X == other.MaxX && _max.Y == other.MaxY &&
+                   _min.X == other.MinX && _min.Y == other.MinY;
         }
 
         /// <summary>
@@ -794,10 +834,10 @@ namespace GeoAPI.Geometries
         {
             var result = 17;
             // ReSharper disable NonReadonlyFieldInGetHashCode
-            result = 37 * result + GetHashCode(_minx);
-            result = 37 * result + GetHashCode(_maxx);
-            result = 37 * result + GetHashCode(_miny);
-            result = 37 * result + GetHashCode(_maxy);
+            result = 37 * result + GetHashCode(_min.X);
+            result = 37 * result + GetHashCode(_max.X);
+            result = 37 * result + GetHashCode(_min.Y);
+            result = 37 * result + GetHashCode(_max.Y);
             // ReSharper restore NonReadonlyFieldInGetHashCode
             return result;
         }
@@ -831,12 +871,14 @@ namespace GeoAPI.Geometries
             }
             else
             {
-                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _minx, _maxx);
-                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}]", _miny, _maxy);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _min.X, _max.X);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _min.Y, _max.Y);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _min.Z, _max.Z);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}]", _min.M, _max.M);
             }
             return sb.ToString();
 
-            //return "Env[" + _minx + " : " + _maxx + ", " + _miny + " : " + _maxy + "]";
+            //return "Env[" + min.X + " : " + max.X + ", " + min.Y + " : " + max.Y + "]";
         }
 
         /// <summary>
@@ -863,7 +905,7 @@ namespace GeoAPI.Geometries
                 // #179: This will create a new 'NULL' envelope
                 return new Envelope();
             }
-            return new Envelope(_minx, _maxx, _miny, _maxy);
+            return new Envelope(_min.X, _max.X, _min.Y, _max.Y);
         }
 
         /// <summary>
@@ -894,10 +936,10 @@ namespace GeoAPI.Geometries
             if (IsNull)
                 return box;
 
-            return new Envelope(Math.Min(_minx, box.MinX),
-                                Math.Max(_maxx, box.MaxX),
-                                Math.Min(_miny, box.MinY),
-                                Math.Max(_maxy, box.MaxY));
+            return new Envelope(Math.Min(_min.X, box.MinX),
+                                Math.Max(_max.X, box.MaxX),
+                                Math.Min(_min.Y, box.MinY),
+                                Math.Max(_max.Y, box.MaxY));
         }
 
         /// <summary>
@@ -947,10 +989,10 @@ namespace GeoAPI.Geometries
         /// <param name="height">The new height.</param>
         void IEnvelope.SetCentre(ICoordinate centre, double width, double height)
         {
-            _minx = centre.X - (width / 2);
-            _maxx = centre.X + (width / 2);
-            _miny = centre.Y - (height / 2);
-            _maxy = centre.Y + (height / 2);
+            _min.X = centre.X - (width / 2);
+            _max.X = centre.X + (width / 2);
+            _min.Y = centre.Y - (height / 2);
+            _max.Y = centre.Y + (height / 2);
         }
 
         /// <summary>
@@ -1007,10 +1049,10 @@ namespace GeoAPI.Geometries
         /// <param name="env">The Envelope to initialize from.</param>
         void IEnvelope.Init(IEnvelope env)
         {
-            _minx = env.MinX;
-            _maxx = env.MaxX;
-            _miny = env.MinY;
-            _maxy = env.MaxY;
+            _min.X = env.MinX;
+            _max.X = env.MaxX;
+            _min.Y = env.MinY;
+            _max.Y = env.MaxY;
         }
 
         /// <summary>
@@ -1037,21 +1079,21 @@ namespace GeoAPI.Geometries
                 return;
             if (IsNull)
             {
-                _minx = other.MinX;
-                _maxx = other.MaxX;
-                _miny = other.MinY;
-                _maxy = other.MaxY;
+                _min.X = other.MinX;
+                _max.X = other.MaxX;
+                _min.Y = other.MinY;
+                _max.Y = other.MaxY;
             }
             else
             {
-                if (other.MinX < _minx)
-                    _minx = other.MinX;
-                if (other.MaxX > _maxx)
-                    _maxx = other.MaxX;
-                if (other.MinY < _miny)
-                    _miny = other.MinY;
-                if (other.MaxY > _maxy)
-                    _maxy = other.MaxY;
+                if (other.MinX < _min.X)
+                    _min.X = other.MinX;
+                if (other.MaxX > _max.X)
+                    _max.X = other.MaxX;
+                if (other.MinY < _min.Y)
+                    _min.Y = other.MinY;
+                if (other.MaxY > _max.Y)
+                    _max.Y = other.MaxY;
             }
         }
 
@@ -1105,7 +1147,7 @@ namespace GeoAPI.Geometries
         {
             if (IsNull || other.IsNull)
                 return false;
-            return !(other.MinX > _maxx || other.MaxX < _minx || other.MinY > _maxy || other.MaxY < _miny);
+            return !(other.MinX > _max.X || other.MaxX < _min.X || other.MinY > _max.Y || other.MaxY < _min.Y);
         }
 
         /// <summary>
@@ -1191,10 +1233,10 @@ namespace GeoAPI.Geometries
         {
             if (IsNull || other.IsNull)
                 return false;
-            return other.MinX >= _minx &&
-                other.MaxX <= _maxx &&
-                other.MinY >= _miny &&
-                other.MaxY <= _maxy;
+            return other.MinX >= _min.X &&
+                other.MaxX <= _max.X &&
+                other.MinY >= _min.Y &&
+                other.MaxY <= _max.Y;
         }
 
         /// <summary>
@@ -1211,17 +1253,17 @@ namespace GeoAPI.Geometries
 
             double dx = 0.0;
 
-            if (_maxx < env.MinX)
-                dx = env.MinX - _maxx;
-            else if (_minx > env.MaxX)
-                dx = _minx - env.MaxX;
+            if (_max.X < env.MinX)
+                dx = env.MinX - _max.X;
+            else if (_min.X > env.MaxX)
+                dx = _min.X - env.MaxX;
 
             double dy = 0.0;
 
-            if (_maxy < env.MinY)
-                dy = env.MinY - _maxy;
-            else if (_miny > env.MaxY)
-                dy = _miny - env.MaxY;
+            if (_max.Y < env.MinY)
+                dy = env.MinY - _max.Y;
+            else if (_min.Y > env.MaxY)
+                dy = _min.Y - env.MaxY;
 
             // if either is zero, the envelopes overlap either vertically or horizontally
             if (dx == 0.0)
@@ -1237,8 +1279,8 @@ namespace GeoAPI.Geometries
             if (IsNull)
                 return other.IsNull;
 
-            return _maxx == other.MaxX && _maxy == other.MaxY &&
-                   _minx == other.MinX && _miny == other.MinY;
+            return _max.X == other.MaxX && _max.Y == other.MaxY &&
+                   _min.X == other.MinX && _min.Y == other.MinY;
         }
 
         int IComparable<IEnvelope>.CompareTo(IEnvelope other)

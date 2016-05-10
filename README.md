@@ -1,4 +1,4 @@
-[![Travis](https://travis-ci.org/NetTopologySuite/GeoAPI.svg?branch=master)](https://travis-ci.org/NetTopologySuite/GeoAPI)
+[![Travis](https://travis-ci.org/DotSpatial/GeoAPI.svg?branch=master)](https://travis-ci.org/DotSpatial/GeoAPI)
 
-# GeoAPI
-GeoAPI.NET project provides a common framework based on OGC/ISO standards to improve interoperability among .NET GIS projects.
+# DotSpatial GeoAPI
+This is custom build of GeoAPI.NET for DotSpatial project.

@@ -304,5 +304,19 @@ namespace GeoAPI.Geometries
         /// this <c>Geometry</c> and its component geometries.
         /// </summary>
         void GeometryChangedAction();
+
+        /* Begin DotSpatial changes added by jany_ */
+
+        /// <summary>
+        /// Forces the cached envelope to be re-calculated using the coordinates.
+        /// </summary>
+        void UpdateEnvelope();
+
+        /// <summary>
+        /// Clears any cached envelopes
+        /// </summary>
+        void ClearEnvelope();
+
+        /* End DotSpatial changes added by jany_ */
     }
 }

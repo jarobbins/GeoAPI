@@ -1,33 +1,32 @@
 <?xml version="1.0"?>
 <package >
 	<metadata>
-		<id>GeoAPI</id>
+		<id>DotSpatial.GeoAPI</id>
 		<version>$version$</version>
-		<authors>NetTopologySuite - Team</authors>
-		<owners>NetTopologySuite - Team</owners>
+		<authors>DotSpatial Team, NetTopologySuite - Team</authors>
+		<owners>dotspatial</owners>
 		<licenseUrl>http://geoapi.codeplex.com/license</licenseUrl>
-		<projectUrl>https://github.com/NetTopologySuite/GeoAPI</projectUrl>
+		<projectUrl>https://github.com/DotSpatial/GeoAPI</projectUrl>
 		<!--<iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>GeoAPI.NET project provides a common framework based on OGC/ISO standards to improve interoperability among .NET GIS projects.</description>
-		<releaseNotes>This version matches NetTopologySuite v1.14 API.</releaseNotes>
-		<copyright>Copyright 2007-2015</copyright>
+		<description>This is custom build of GeoAPI.NET for DotSpatial project.</description>		
+		<copyright>Copyright 2007-2016</copyright>
 		<tags>OGC SFS NTS GIS</tags>
 	</metadata>
 	<files>
-		<file src="Release\v2.0\AnyCPU\GeoAPI.dll" target="lib\net20" />
+		<!--<file src="Release\v2.0\AnyCPU\GeoAPI.dll" target="lib\net20" />
 		<file src="Release\v2.0\AnyCPU\GeoAPI.pdb" target="lib\net20" />
 		<file src="Release\v2.0\AnyCPU\GeoAPI.xml" target="lib\net20" />
 
 		<file src="Release\v3.5\AnyCPU\GeoAPI.dll" target="lib\net35-client" />
 		<file src="Release\v3.5\AnyCPU\GeoAPI.pdb" target="lib\net35-client" />
-		<file src="Release\v3.5\AnyCPU\GeoAPI.xml" target="lib\net35-client" />
+		<file src="Release\v3.5\AnyCPU\GeoAPI.xml" target="lib\net35-client" />-->
 
-		<file src="Release\v4.0\AnyCPU\GeoAPI.dll" target="lib\net40-client" />
-		<file src="Release\v4.0\AnyCPU\GeoAPI.pdb" target="lib\net40-client" />
-		<file src="Release\v4.0\AnyCPU\GeoAPI.xml" target="lib\net40-client" />
+		<file src="Release\v4.0\AnyCPU\DotSpatial.GeoAPI.dll" target="lib\net40-client" />
+		<file src="Release\v4.0\AnyCPU\DotSpatial.GeoAPI.pdb" target="lib\net40-client" />
+		<file src="Release\v4.0\AnyCPU\DotSpatial.GeoAPI.xml" target="lib\net40-client" />
 
-		<file src="Release\v4.0.3\AnyCPU\GeoAPI.dll" target="lib\net403-client" />
+		<!--<file src="Release\v4.0.3\AnyCPU\GeoAPI.dll" target="lib\net403-client" />
 		<file src="Release\v4.0.3\AnyCPU\GeoAPI.pdb" target="lib\net403-client" />
 		<file src="Release\v4.0.3\AnyCPU\GeoAPI.xml" target="lib\net403-client" />
 
@@ -37,7 +36,7 @@
 
 		<file src="Release\PCL\AnyCPU\GeoAPI.dll" target="lib\portable-net403+sl5+netcore45+wpa81+wp8+MonoAndroid10+XamariniOS10+MonoTouch10" />
 		<file src="Release\PCL\AnyCPU\GeoAPI.pdb" target="lib\portable-net403+sl5+netcore45+wpa81+wp8+MonoAndroid10+XamariniOS10+MonoTouch10" />
-		<file src="Release\PCL\AnyCPU\GeoAPI.xml" target="lib\portable-net403+sl5+netcore45+wpa81+wp8+MonoAndroid10+XamariniOS10+MonoTouch10" />
+		<file src="Release\PCL\AnyCPU\GeoAPI.xml" target="lib\portable-net403+sl5+netcore45+wpa81+wp8+MonoAndroid10+XamariniOS10+MonoTouch10" />-->
 
 		<file src="GeoAPI.Pcl\BitConverterEx.cs" target="src\BitConverterEx.cs" />
 		<file src="GeoAPI\CoordinateSystems\AxisInfo.cs" target="src\CoordinateSystems\AxisInfo.cs" />
