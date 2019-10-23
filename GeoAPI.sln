@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoAPI", "GeoAPI\GeoAPI.csproj", "{FFB69466-79DE-466A-ADA7-5C47C5C5CA3A}"
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoDigital.GeoAPI", "GeoAPI\GeoDigital.GeoAPI.csproj", "{FFB69466-79DE-466A-ADA7-5C47C5C5CA3A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoAPI.Pcl", "GeoAPI.Pcl\GeoAPI.Pcl.csproj", "{92B3B84B-50F1-4147-8B97-D93B90FA5514}"
 EndProject
@@ -28,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7353A26A-7668-4CD6-B101-DD6AC0143051}
 	EndGlobalSection
 EndGlobal
